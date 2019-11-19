@@ -24,7 +24,9 @@
   "require": {
     "php": "^7.2",
     "lcobucci/jwt": "^3.0",
-    "illuminate/auth": "^6.0"
+    "illuminate/auth": "^6.0",
+    "illuminate/foundation": "^6.0",
+    "ramsey/uuid": "^3.7"
   },
   "extra": {
     "laravel": {

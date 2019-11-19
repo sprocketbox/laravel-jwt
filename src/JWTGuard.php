@@ -100,8 +100,6 @@ class JWTGuard implements Guard
         $this->user = $user;
 
         $this->fireAuthenticatedEvent($user);
-
-        return $this;
     }
 
     /**
@@ -211,7 +209,7 @@ class JWTGuard implements Guard
 
         if ($this->shouldSignToken()) {
             try {
-                return $token->verify(new Sha256(), new Key($this->config['key']));
+                return $token->verify(new Sha256(), (new Key($this->config['key']))->getContent());
             } catch (BadMethodCallException $exception) {
                 report($exception);
             }
