@@ -1,0 +1,36 @@
+{
+  "name": "sprocketbox/laravel-jwt",
+  "description": "A seamless JWT implementation for Laravel",
+  "keywords": [
+    "laravel",
+    "auth",
+    "authentication",
+    "jwt",
+    "api"
+  ],
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ollie Read",
+      "email": "ollie@sprocketbox.io"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Sprocketbox\\JWT\\": "src/"
+    }
+  },
+  "require": {
+    "php": "^7.2",
+    "lcobucci/jwt": "^3.0",
+    "illuminate/auth": "^6.0"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Sprocketbox\\JWT\\JWTServiceProvider"
+      ]
+    }
+  }
+}
