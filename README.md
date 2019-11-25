@@ -141,7 +141,7 @@ The token is generated using the [lcobucci/jwt](https://github.com/lcobucci/jwt)
 There are a couple of things that I wish to add into later versions of this package.
 I've made an attempt to list them all here, as a sort of roadmap.
 
-- [] Custom token generation
-- [] Custom token validation
-- [] Database driven log of `jti`, `aud` and `exp` to blacklist and revoke tokens
-- [] Provide auth scaffolding for generating JWTs
+- [ ] Custom token generation
+- [ ] Custom token validation
+- [ ] Database driven log of `jti`, `aud` and `exp` to blacklist and revoke tokens
+- [ ] Provide auth scaffolding for generating JWTs
