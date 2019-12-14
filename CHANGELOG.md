@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2019-12-14
+### Fixed
+- Added missing property for cookie jar on JWT guard
+- Added null check for user provider when instantiating guard
+- Updated docblocks for exceptions
+- Explicitly call `toString()` method on UUIDs
+
 ## [1.1.0] - 2019-12-14
 ### Added
 - Added HTTP only cookie support
@@ -19,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2019-11-19
 - Initial release
 
-[Unreleased]: https://github.com/sprocketbox/laravel-jwt/compare/v1.1.0...develop
+[Unreleased]: https://github.com/sprocketbox/laravel-jwt/compare/v1.1.1...develop
+[1.1.1]: https://github.com/sprocketbox/laravel-jwt/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/sprocketbox/laravel-jwt/compare/v1.0...v1.1.0
 [1.0.0]: https://github.com/sprocketbox/laravel-jwt/releases/tag/v1.0
