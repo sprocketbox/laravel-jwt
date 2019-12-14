@@ -43,6 +43,16 @@ class JWTGuard implements Guard
     private $token;
 
     /**
+     * @var callable|null
+     */
+    private $tokenGenerator;
+
+    /**
+     * @var callable|null
+     */
+    private $tokenValidator;
+
+    /**
      * Create a new authentication guard.
      *
      * @param \Illuminate\Contracts\Auth\UserProvider $userProvider
@@ -153,15 +163,7 @@ class JWTGuard implements Guard
      */
     public function login(Authenticatable $user, bool $cookie = false): Token
     {
-        $time    = Carbon::now();
-        $expiry  = CarbonInterval::fromString($this->config['ttl']);
-        $builder = (new Builder)
-            ->issuedBy(config('app.url'))
-            ->permittedFor(config('app.url'))
-            ->identifiedBy(Uuid::uuid4())
-            ->issuedAt($time->timestamp)
-            ->expiresAt($time->copy()->add($expiry)->timestamp)
-            ->relatedTo($user->getAuthIdentifier());
+        $builder = $this->generateToken($user);
 
         if ($this->shouldSignToken()) {
             $token = $builder->getToken(new $this->config['signer'], new Key($this->config['key']));
@@ -175,7 +177,7 @@ class JWTGuard implements Guard
         $this->setToken($token);
 
         if ($cookie) {
-            $this->createJwtCookie($token, $expiry);
+            $this->createJwtCookie($token, $token->getClaim('exp'));
         }
 
         return $token;
@@ -217,6 +219,30 @@ class JWTGuard implements Guard
     }
 
     /**
+     * @param callable|null $tokenGenerator
+     *
+     * @return \Sprocketbox\JWT\JWTGuard
+     */
+    public function setTokenGenerator(?callable $tokenGenerator): self
+    {
+        $this->tokenGenerator = $tokenGenerator;
+
+        return $this;
+    }
+
+    /**
+     * @param callable|null $tokenValidator
+     *
+     * @return \Sprocketbox\JWT\JWTGuard
+     */
+    public function setTokenValidator(?callable $tokenValidator): self
+    {
+        $this->tokenValidator = $tokenValidator;
+
+        return $this;
+    }
+
+    /**
      * Get the token from the current request.
      *
      * @return \Lcobucci\JWT\Token|null
@@ -245,16 +271,22 @@ class JWTGuard implements Guard
      */
     private function validateToken(Token $token): bool
     {
-        $validator = new ValidationData;
-        $validator->setAudience(config('app.url'));
-        $validator->setIssuer(config('app.url'));
+        if ($this->tokenValidator !== null) {
+            if (call_user_func($this->tokenValidator, $token, $this) === false) {
+                return false;
+            }
+        } else {
+            $validator = new ValidationData;
+            $validator->setAudience(config('app.url'));
+            $validator->setIssuer(config('app.url'));
 
-        if (! $token->validate($validator)) {
-            return false;
-        }
+            if (! $token->validate($validator)) {
+                return false;
+            }
 
-        if ($token->isExpired()) {
-            return false;
+            if ($token->isExpired()) {
+                return false;
+            }
         }
 
         if ($this->shouldSignToken()) {
@@ -335,13 +367,31 @@ class JWTGuard implements Guard
     /**
      * Create the HTTP only JWT cookie
      *
-     * @param \Lcobucci\JWT\Token    $token
-     * @param \Carbon\CarbonInterval $expiry
+     * @param \Lcobucci\JWT\Token $token
+     * @param int                 $expiry
      */
-    private function createJwtCookie(Token $token, CarbonInterval $expiry): void
+    private function createJwtCookie(Token $token, int $expiry): void
     {
         $this->getCookieJar()->queue(
-            $this->getCookieJar()->make($this->getCookieName(), (string) $token, $expiry->minutes)
+            $this->getCookieJar()->make($this->getCookieName(), (string) $token, ($expiry - time()) / 60)
         );
+    }
+
+    private function generateToken(Authenticatable $user): Builder
+    {
+        if ($this->tokenGenerator !== null) {
+            return call_user_func($this->tokenGenerator, $user, $this);
+        }
+
+        $time   = Carbon::now();
+        $expiry = CarbonInterval::fromString($this->config['ttl']);
+
+        return (new Builder)
+            ->issuedBy(config('app.url'))
+            ->permittedFor(config('app.url'))
+            ->identifiedBy(Uuid::uuid4())
+            ->issuedAt($time->timestamp)
+            ->expiresAt($time->copy()->add($expiry)->timestamp)
+            ->relatedTo($user->getAuthIdentifier());
     }
 }

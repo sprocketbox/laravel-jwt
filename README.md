@@ -19,6 +19,8 @@ authentication library allowing for stateless API authentication.
     - [Key](#key)
     - [Signer](#signer)
     - [TTL](#ttl)
+    - [Customer generation](#custom-generation)
+    - [Customer validation](#custom-validation)
 - [Usage](#usage)
     - [Providing the token](#providing-the-token)
     - [Getting the token](#getting-the-token)
@@ -89,6 +91,28 @@ default you can omit this option.
 By default this package will set the TTL (total time to live) to 1 month, or more precisely `P1M`. If you wish to change
 this you can set the `ttl` config value to be a valid [interval spec](https://www.php.net/manual/en/dateinterval.construct.php#refsect1-dateinterval.construct-parameters).
 
+### Custom generation
+If you wish to generate the token yourself you can provide a custom generator like so:
+
+```php
+Auth::guard('api')->setTokenGenerator(function (\Illuminate\Contracts\Auth\Authenticatable $user, \Sprocketbox\JWT\JWTGuard $guard) {
+    return $instanceOfBuilder;
+});
+```
+
+The generator must return an instance of `Lcobucci\JWT\Builder`.
+
+### Custom validation
+If you wish to provide custom validation for your token you may provide it like so:
+
+```php
+Auth::guard('api')->setTokenValidator(function (\Lcobucci\JWT\Token $token, \Sprocketbox\JWT\JWTGuard $guard) {
+    return $validationState;
+});
+```
+
+If the validation fails you must return `false`. Any other return type, including `null` will be treated as a pass.
+
 ## Usage
 This package functions in an almost identical way to Laravels session authentication, with a few exceptions.
 
@@ -154,7 +178,7 @@ There are a couple of things that I wish to add into later versions of this pack
 I've made an attempt to list them all here, as a sort of roadmap.
 
 - [x] HTTP Only cookie support (XSS)
-- [ ] Custom token generation
-- [ ] Custom token validation
+- [x] Custom token generation
+- [x] Custom token validation
 - [ ] Database driven log of `jti`, `aud` and `exp` to blacklist and revoke tokens
 - [ ] Provide auth scaffolding for generating JWTs
