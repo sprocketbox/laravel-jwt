@@ -253,6 +253,10 @@ class JWTGuard implements Guard
             return false;
         }
 
+        if ($token->isExpired()) {
+            return false;
+        }
+
         if ($this->shouldSignToken()) {
             try {
                 return $token->verify(new Sha256(), (new Key($this->config['key']))->getContent());
