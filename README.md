@@ -19,10 +19,13 @@ authentication library allowing for stateless API authentication.
     - [Key](#key)
     - [Signer](#signer)
     - [TTL](#ttl)
+    - [Customer generation](#custom-generation)
+    - [Customer validation](#custom-validation)
 - [Usage](#usage)
     - [Providing the token](#providing-the-token)
     - [Getting the token](#getting-the-token)
     - [Example](#example)
+    - [Avoiding XSS](#avoiding-xss)
     - [Events](#events)
 - [The token](#the-token)
 - [The future](#the-future)
@@ -88,6 +91,28 @@ default you can omit this option.
 By default this package will set the TTL (total time to live) to 1 month, or more precisely `P1M`. If you wish to change
 this you can set the `ttl` config value to be a valid [interval spec](https://www.php.net/manual/en/dateinterval.construct.php#refsect1-dateinterval.construct-parameters).
 
+### Custom generation
+If you wish to generate the token yourself you can provide a custom generator like so:
+
+```php
+Auth::guard('api')->setTokenGenerator(function (\Illuminate\Contracts\Auth\Authenticatable $user, \Sprocketbox\JWT\JWTGuard $guard) {
+    return $instanceOfBuilder;
+});
+```
+
+The generator must return an instance of `Lcobucci\JWT\Builder`.
+
+### Custom validation
+If you wish to provide custom validation for your token you may provide it like so:
+
+```php
+Auth::guard('api')->setTokenValidator(function (\Lcobucci\JWT\Token $token, \Sprocketbox\JWT\JWTGuard $guard) {
+    return $validationState;
+});
+```
+
+If the validation fails you must return `false`. Any other return type, including `null` will be treated as a pass.
+
 ## Usage
 This package functions in an almost identical way to Laravels session authentication, with a few exceptions.
 
@@ -97,6 +122,9 @@ The token is loaded as a bearer token, so you must provide it as a bearer token 
 ```php
 Authorization: Bearer TOKEN_HERE
 ```
+
+If you passed `true` as the second argument for `attempt()` the token will be automatically provided
+by the cookie, removing the need to manually pass the token.
 
 ### Getting the token
 The `Auth::attempt($credentials)` method is missing the second parameter (remember me) and instead of returning a 
@@ -120,6 +148,14 @@ if ($token !== null) {
 return response()->json(null, 401);
 ```
 
+### Avoiding XSS
+If you pass `true` as the second argument for `attempt()` the guard will create a HTTP only
+(Not accessible via javascript) cookie. This will prevent you from having to store the token in
+the browsers localStorage.
+
+It's also advised to simply return a `204` response when using this method so that the token data isn't
+output anywhere.
+
 ### Events
 The login and authenticated events are called just like with the session guard.
 
@@ -141,7 +177,8 @@ The token is generated using the [lcobucci/jwt](https://github.com/lcobucci/jwt)
 There are a couple of things that I wish to add into later versions of this package.
 I've made an attempt to list them all here, as a sort of roadmap.
 
-- [ ] Custom token generation
-- [ ] Custom token validation
+- [x] HTTP Only cookie support (XSS)
+- [x] Custom token generation
+- [x] Custom token validation
 - [ ] Database driven log of `jti`, `aud` and `exp` to blacklist and revoke tokens
 - [ ] Provide auth scaffolding for generating JWTs
