@@ -23,6 +23,7 @@ authentication library allowing for stateless API authentication.
     - [Providing the token](#providing-the-token)
     - [Getting the token](#getting-the-token)
     - [Example](#example)
+    - [Avoiding XSS](#avoiding-xss)
     - [Events](#events)
 - [The token](#the-token)
 - [The future](#the-future)
@@ -98,6 +99,9 @@ The token is loaded as a bearer token, so you must provide it as a bearer token 
 Authorization: Bearer TOKEN_HERE
 ```
 
+If you passed `true` as the second argument for `attempt()` the token will be automatically provided
+by the cookie, removing the need to manually pass the token.
+
 ### Getting the token
 The `Auth::attempt($credentials)` method is missing the second parameter (remember me) and instead of returning a 
 boolean, returns an instance of `Lcobucci\JWT\Token`. Casting this object to a string will give you the
@@ -120,6 +124,14 @@ if ($token !== null) {
 return response()->json(null, 401);
 ```
 
+### Avoiding XSS
+If you pass `true` as the second argument for `attempt()` the guard will create a HTTP only
+(Not accessible via javascript) cookie. This will prevent you from having to store the token in
+the browsers localStorage.
+
+It's also advised to simply return a `204` response when using this method so that the token data isn't
+output anywhere.
+
 ### Events
 The login and authenticated events are called just like with the session guard.
 
@@ -141,6 +153,7 @@ The token is generated using the [lcobucci/jwt](https://github.com/lcobucci/jwt)
 There are a couple of things that I wish to add into later versions of this package.
 I've made an attempt to list them all here, as a sort of roadmap.
 
+- [x] HTTP Only cookie support (XSS)
 - [ ] Custom token generation
 - [ ] Custom token validation
 - [ ] Database driven log of `jti`, `aud` and `exp` to blacklist and revoke tokens
