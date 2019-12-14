@@ -1,5 +1,8 @@
 # Laravel JWT
-[![Latest Stable Version](https://poser.pugx.org/sprocketbox/laravel-jwt/v/stable.png)](https://packagist.org/packages/sprocketbox/laravel-jwt) [![Latest Unstable Version](https://poser.pugx.org/sprocketbox/laravel-jwt/v/unstable.png)](https://packagist.org/packages/sprocketbox/laravel-jwt) [![License](https://poser.pugx.org/sprocketbox/laravel-jwt/license.png)](https://packagist.org/packages/sprocketbox/laravel-jwt)
+[![Latest Stable Version](https://poser.pugx.org/sprocketbox/laravel-jwt/v/stable.png)](https://packagist.org/packages/sprocketbox/laravel-jwt) 
+[![Latest Unstable Version](https://poser.pugx.org/sprocketbox/laravel-jwt/v/unstable.png)](https://packagist.org/packages/sprocketbox/laravel-jwt) 
+[![License](https://poser.pugx.org/sprocketbox/laravel-jwt/license.png)](https://packagist.org/packages/sprocketbox/laravel-jwt)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sprocketbox/laravel-jwt/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/sprocketbox/laravel-jwt/?branch=master)
 
 - **Laravel**: 6
 - **PHP**: 7.2+
