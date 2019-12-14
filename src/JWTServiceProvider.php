@@ -5,6 +5,7 @@ namespace Sprocketbox\JWT;
 use Illuminate\Auth\AuthManager;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+use RuntimeException;
 
 class JWTServiceProvider extends BaseServiceProvider
 {
@@ -13,7 +14,13 @@ class JWTServiceProvider extends BaseServiceProvider
         // Register the JWT driver with Laravel
         $auth = $this->app->make(AuthManager::class);
         $auth->extend('jwt', function (Application $app, string $name, array $config) use ($auth) {
-            $guard = new JWTGuard($auth->createUserProvider($config['provider'] ?? null), $name, $config);
+            $provider = $auth->createUserProvider($config['provider'] ?? null);
+
+            if ($provider === null) {
+                throw new RuntimeException('No user provider available');
+            }
+
+            $guard = new JWTGuard($provider, $name, $config);
             $guard
                 // Set the request instance on the guard
                 ->setRequest($app->refresh('request', $guard, 'setRequest'))
