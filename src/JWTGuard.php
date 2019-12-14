@@ -53,6 +53,11 @@ class JWTGuard implements Guard
     private $tokenValidator;
 
     /**
+     * @var \Illuminate\Contracts\Cookie\QueueingFactory
+     */
+    private $cookie;
+
+    /**
      * Create a new authentication guard.
      *
      * @param \Illuminate\Contracts\Auth\UserProvider $userProvider
