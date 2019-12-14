@@ -382,6 +382,12 @@ class JWTGuard implements Guard
         );
     }
 
+    /**
+     * @param \Illuminate\Contracts\Auth\Authenticatable $user
+     *
+     * @return \Lcobucci\JWT\Builder
+     * @throws \Exception
+     */
     private function generateToken(Authenticatable $user): Builder
     {
         if ($this->tokenGenerator !== null) {
@@ -394,7 +400,7 @@ class JWTGuard implements Guard
         return (new Builder)
             ->issuedBy(config('app.url'))
             ->permittedFor(config('app.url'))
-            ->identifiedBy(Uuid::uuid4())
+            ->identifiedBy(Uuid::uuid4()->toString())
             ->issuedAt($time->timestamp)
             ->expiresAt($time->copy()->add($expiry)->timestamp)
             ->relatedTo($user->getAuthIdentifier());
