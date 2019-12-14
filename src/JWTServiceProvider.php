@@ -18,7 +18,9 @@ class JWTServiceProvider extends BaseServiceProvider
                 // Set the request instance on the guard
                 ->setRequest($app->refresh('request', $guard, 'setRequest'))
                 // Set the event dispatcher on the guard
-                ->setDispatcher($this->app['events']);
+                ->setDispatcher($this->app['events'])
+                // Set the cookie jar
+                ->setCookieJar($this->app['cookie']);
 
             return $guard;
         });

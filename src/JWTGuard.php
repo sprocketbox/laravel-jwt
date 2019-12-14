@@ -7,6 +7,7 @@ use Carbon\CarbonInterval;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
+use Illuminate\Contracts\Cookie\QueueingFactory as CookieJar;
 use Illuminate\Support\Carbon;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Parser;
@@ -15,6 +16,7 @@ use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Token;
 use Lcobucci\JWT\ValidationData;
 use Ramsey\Uuid\Uuid;
+use RuntimeException;
 use Sprocketbox\JWT\Concerns\DefaultCompatibility;
 
 /**
@@ -62,7 +64,11 @@ class JWTGuard implements Guard
     public function user(): ?Authenticatable
     {
         if ($this->user === null) {
-            $token = $this->getTokenFromRequest();
+            $token = $this->getTokenFromCookie();
+
+            if ($token === null) {
+                $token = $this->getTokenFromRequest();
+            }
 
             if ($token !== null) {
                 $this->user = $this->getProvider()->retrieveById($token->getClaim('sub'));
@@ -116,18 +122,19 @@ class JWTGuard implements Guard
      * Attempt to log a user in.
      *
      * @param array $credentials
+     * @param bool  $cookie
      *
      * @return \Lcobucci\JWT\Token|null
      * @throws \Exception
      */
-    public function attempt(array $credentials = []): ?Token
+    public function attempt(array $credentials = [], bool $cookie = false): ?Token
     {
         $this->fireAttemptEvent($credentials, false);
 
         $this->lastAttempted = $user = $this->provider->retrieveByCredentials($credentials);
 
         if ($this->hasValidCredentials($user, $credentials)) {
-            return $this->login($user);
+            return $this->login($user, $cookie);
         }
 
         $this->fireFailedEvent($user, $credentials);
@@ -139,19 +146,21 @@ class JWTGuard implements Guard
      * Log a user into the application.
      *
      * @param \Illuminate\Contracts\Auth\Authenticatable $user
+     * @param bool                                       $cookie
      *
      * @return \Lcobucci\JWT\Token
      * @throws \Exception
      */
-    public function login(Authenticatable $user): Token
+    public function login(Authenticatable $user, bool $cookie = false): Token
     {
         $time    = Carbon::now();
+        $expiry  = CarbonInterval::fromString($this->config['ttl']);
         $builder = (new Builder)
             ->issuedBy(config('app.url'))
             ->permittedFor(config('app.url'))
             ->identifiedBy(Uuid::uuid4())
             ->issuedAt($time->timestamp)
-            ->expiresAt($time->add(CarbonInterval::fromString($this->config['ttl']))->timestamp)
+            ->expiresAt($time->copy()->add($expiry)->timestamp)
             ->relatedTo($user->getAuthIdentifier());
 
         if ($this->shouldSignToken()) {
@@ -165,7 +174,46 @@ class JWTGuard implements Guard
         $this->setUser($user);
         $this->setToken($token);
 
+        if ($cookie) {
+            $this->createJwtCookie($token, $expiry);
+        }
+
         return $token;
+    }
+
+    public function getCookieName(): string
+    {
+        return 'login_' . $this->name . '_' . sha1(static::class);
+    }
+
+    /**
+     * Get the cookie creator instance used by the guard.
+     *
+     * @return \Illuminate\Contracts\Cookie\QueueingFactory
+     *
+     * @throws \RuntimeException
+     */
+    public function getCookieJar(): CookieJar
+    {
+        if (! isset($this->cookie)) {
+            throw new RuntimeException('Cookie jar has not been set.');
+        }
+
+        return $this->cookie;
+    }
+
+    /**
+     * Set the cookie creator instance used by the guard.
+     *
+     * @param \Illuminate\Contracts\Cookie\QueueingFactory $cookie
+     *
+     * @return \Sprocketbox\JWT\JWTGuard
+     */
+    public function setCookieJar(CookieJar $cookie): self
+    {
+        $this->cookie = $cookie;
+
+        return $this;
     }
 
     /**
@@ -175,19 +223,17 @@ class JWTGuard implements Guard
      */
     private function getTokenFromRequest(): ?Token
     {
-        $jwt = $this->getRequest()->bearerToken();
+        return $this->parseToken($this->getRequest()->bearerToken());
+    }
 
-        if (empty($jwt)) {
-            return null;
-        }
-
-        $token = (new Parser)->parse($jwt);
-
-        if (! $this->validateToken($token)) {
-            return null;
-        }
-
-        return $token;
+    /**
+     * Get the token from a cookie.
+     *
+     * @return \Lcobucci\JWT\Token|null
+     */
+    private function getTokenFromCookie(): ?Token
+    {
+        return $this->parseToken($this->getRequest()->cookie($this->getCookieName()));
     }
 
     /**
@@ -258,5 +304,40 @@ class JWTGuard implements Guard
         ], $config);
 
         return $this;
+    }
+
+    /**
+     * Parse a JWT string
+     *
+     * @param string|null $jwt
+     *
+     * @return \Lcobucci\JWT\Token|null
+     */
+    private function parseToken(?string $jwt): ?Token
+    {
+        if (empty($jwt)) {
+            return null;
+        }
+
+        $token = (new Parser)->parse($jwt);
+
+        if (! $this->validateToken($token)) {
+            return null;
+        }
+
+        return $token;
+    }
+
+    /**
+     * Create the HTTP only JWT cookie
+     *
+     * @param \Lcobucci\JWT\Token    $token
+     * @param \Carbon\CarbonInterval $expiry
+     */
+    private function createJwtCookie(Token $token, CarbonInterval $expiry): void
+    {
+        $this->getCookieJar()->queue(
+            $this->getCookieJar()->make($this->getCookieName(), (string) $token, $expiry->minutes)
+        );
     }
 }
