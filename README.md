@@ -156,6 +156,20 @@ If you pass `true` as the second argument for `attempt()` the guard will create 
 (Not accessible via javascript) cookie. This will prevent you from having to store the token in
 the browsers localStorage.
 
+To make sure that the cookie is added to the response you need to add the following middleware to 
+your routes.
+
+```
+Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class
+```
+
+It makes sense to add this to the `api` group. Though it's not technically required, I recommend that 
+you also add the following middleware to encrypt the cookies.
+
+```
+App\Http\Middleware\EncryptCookies::class
+```
+
 It's also advised to simply return a `204` response when using this method so that the token data isn't
 output anywhere.
 
