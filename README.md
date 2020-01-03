@@ -1,5 +1,8 @@
 # Laravel JWT
-[![Latest Stable Version](https://poser.pugx.org/sprocketbox/laravel-jwt/v/stable.png)](https://packagist.org/packages/sprocketbox/laravel-jwt) [![Latest Unstable Version](https://poser.pugx.org/sprocketbox/laravel-jwt/v/unstable.png)](https://packagist.org/packages/sprocketbox/laravel-jwt) [![License](https://poser.pugx.org/sprocketbox/laravel-jwt/license.png)](https://packagist.org/packages/sprocketbox/laravel-jwt)
+[![Latest Stable Version](https://poser.pugx.org/sprocketbox/laravel-jwt/v/stable.png)](https://packagist.org/packages/sprocketbox/laravel-jwt) 
+[![Latest Unstable Version](https://poser.pugx.org/sprocketbox/laravel-jwt/v/unstable.png)](https://packagist.org/packages/sprocketbox/laravel-jwt) 
+[![License](https://poser.pugx.org/sprocketbox/laravel-jwt/license.png)](https://packagist.org/packages/sprocketbox/laravel-jwt)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sprocketbox/laravel-jwt/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/sprocketbox/laravel-jwt/?branch=master)
 
 - **Laravel**: 6
 - **PHP**: 7.2+
@@ -152,6 +155,20 @@ return response()->json(null, 401);
 If you pass `true` as the second argument for `attempt()` the guard will create a HTTP only
 (Not accessible via javascript) cookie. This will prevent you from having to store the token in
 the browsers localStorage.
+
+To make sure that the cookie is added to the response you need to add the following middleware to 
+your routes.
+
+```
+Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class
+```
+
+It makes sense to add this to the `api` group. Though it's not technically required, I recommend that 
+you also add the following middleware to encrypt the cookies.
+
+```
+App\Http\Middleware\EncryptCookies::class
+```
 
 It's also advised to simply return a `204` response when using this method so that the token data isn't
 output anywhere.

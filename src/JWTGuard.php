@@ -395,7 +395,7 @@ class JWTGuard implements Guard
         }
 
         $time   = Carbon::now();
-        $expiry = CarbonInterval::fromString($this->config['ttl']);
+        $expiry = new CarbonInterval($this->config['ttl']);
 
         return (new Builder)
             ->issuedBy(config('app.url'))
