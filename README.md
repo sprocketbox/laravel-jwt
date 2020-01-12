@@ -57,7 +57,7 @@ Here's an example configuration for a JWT guard.
 'api' => [
     'driver'   => 'jwt',
     'provider' => 'users',
-    'key'      => env('JWT_KEY'),
+    'key'      => env('JWT_KEY_API'),
     'signer'   => Lcobucci\JWT\Signer\Hmac\Sha256::class,
     'ttl'      => 'P1M',
 ],
@@ -68,10 +68,9 @@ If you don't care to dive into all the extra bits you can create a very minimal 
 by:
 
  - Changing the driver to `jwt` 
- - Adding `'key' => env('JWT_KEY'),`
- - Create your key by running tinker (`php artisan tinker`) and entering `Str::random(64)`
- - Copy that value and prefix with `JWT_KEY=` and add it to the end of your `.env` file.
- - Make sure to add `JWT_KEY=` without the key to the `.env.example` file.
+ - Add `'key' => env('JWT_KEY_GUARD'),` where `GUARD` is the name of your auth guard
+ - Run `php artisan jwt:generate guard` where `guard` is the name of your auth guard
+ - Make sure to duplicate the env variable, but not the value, into your `.env.example` file
 
 ### Driver
 If you wish to use the JWT driver, just set the `driver` option to `jwt`.
@@ -115,6 +114,17 @@ Auth::guard('api')->setTokenValidator(function (\Lcobucci\JWT\Token $token, \Spr
 ```
 
 If the validation fails you must return `false`. Any other return type, including `null` will be treated as a pass.
+
+## Generating keys
+You can generate a key per guard by running the `jwt:generate` command with the name of the guard. The 
+commands signature is:
+
+```
+jwt:generate {guard}
+    {--length : The length of the key, defaults to 32}
+    {--show : Display the key instead of modifying files}
+    {--force : Force the operation to run when in production}
+```
 
 ## Usage
 This package functions in an almost identical way to Laravels session authentication, with a few exceptions.

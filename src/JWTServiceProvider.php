@@ -6,6 +6,7 @@ use Illuminate\Auth\AuthManager;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 use RuntimeException;
+use Sprocketbox\JWT\Commands\KeyGenerateCommand;
 
 class JWTServiceProvider extends BaseServiceProvider
 {
@@ -31,5 +32,9 @@ class JWTServiceProvider extends BaseServiceProvider
 
             return $guard;
         });
+
+        $this->commands([
+            KeyGenerateCommand::class,
+        ]);
     }
 }
