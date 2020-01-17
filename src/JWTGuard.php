@@ -50,6 +50,11 @@ class JWTGuard implements Guard
     /**
      * @var callable|null
      */
+    private $tokenSigning;
+
+    /**
+     * @var callable|null
+     */
     private $tokenValidator;
 
     /**
@@ -171,7 +176,8 @@ class JWTGuard implements Guard
         $builder = $this->generateToken($user);
 
         if ($this->shouldSignToken()) {
-            $token = $builder->getToken(new $this->config['signer'], new Key($this->config['key']));
+            $details = $this->getTokenSigningDetails();
+            $token   = $builder->getToken(...$details);
         } else {
             $token = $builder->getToken();
         }
@@ -231,6 +237,18 @@ class JWTGuard implements Guard
     public function setTokenGenerator(?callable $tokenGenerator): self
     {
         $this->tokenGenerator = $tokenGenerator;
+
+        return $this;
+    }
+
+    /**
+     * @param callable|null $tokenSigning
+     *
+     * @return JWTGuard
+     */
+    public function setTokenSigner(?callable $tokenSigning): JWTGuard
+    {
+        $this->tokenSigning = $tokenSigning;
 
         return $this;
     }
@@ -296,7 +314,8 @@ class JWTGuard implements Guard
 
         if ($this->shouldSignToken()) {
             try {
-                return $token->verify(new Sha256(), (new Key($this->config['key']))->getContent());
+                $details = $this->getTokenSigningDetails();
+                return $token->verify($details[0], ($details[1])->getContent());
             } catch (BadMethodCallException $exception) {
                 report($exception);
             }
@@ -404,5 +423,17 @@ class JWTGuard implements Guard
             ->issuedAt($time->timestamp)
             ->expiresAt($time->copy()->add($expiry)->timestamp)
             ->relatedTo($user->getAuthIdentifier());
+    }
+
+    private function getTokenSigningDetails(): array
+    {
+        if ($this->tokenSigning !== null) {
+            return call_user_func($this->tokenSigning, $this);
+        }
+
+        return [
+            new $this->config['signer'],
+            new Key($this->config['key']),
+        ];
     }
 }
