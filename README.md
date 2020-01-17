@@ -120,7 +120,7 @@ In some situations you may find that the static signing method and key in the co
 case, you can provide an override like so:
 
 ```php
-Auth::guard('api')->setTokenSignatureDetails(function (\Sprocketbox\JWT\JWTGuard $guard): array {
+Auth::guard('api')->setTokenSigner(function (\Sprocketbox\JWT\JWTGuard $guard): array {
     return [
         new config('auth.guards.api.signer'), 
         new \Lcobucci\JWT\Signer\Key(config('auth.guards.api.key'))

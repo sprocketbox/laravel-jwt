@@ -246,7 +246,7 @@ class JWTGuard implements Guard
      *
      * @return JWTGuard
      */
-    public function setTokenSignatureDetails(?callable $tokenSigning): JWTGuard
+    public function setTokenSigner(?callable $tokenSigning): JWTGuard
     {
         $this->tokenSigning = $tokenSigning;
 
