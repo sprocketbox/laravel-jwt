@@ -115,6 +115,21 @@ Auth::guard('api')->setTokenValidator(function (\Lcobucci\JWT\Token $token, \Spr
 
 If the validation fails you must return `false`. Any other return type, including `null` will be treated as a pass.
 
+### Custom token signature generation
+In some situations you may find that the static signing method and key in the config isn't sufficient. If that is the
+case, you can provide an override like so:
+
+```php
+Auth::guard('api')->setTokenSignatureDetails(function (\Sprocketbox\JWT\JWTGuard $guard): array {
+    return [
+        new config('auth.guards.api.signer'), 
+        new \Lcobucci\JWT\Signer\Key(config('auth.guards.api.key'))
+    ];
+});
+```
+
+This must return an array with two indexes, the first being the signer and the second being the key.
+
 ## Generating keys
 You can generate a key per guard by running the `jwt:generate` command with the name of the guard. The 
 commands signature is:
@@ -207,5 +222,6 @@ I've made an attempt to list them all here, as a sort of roadmap.
 - [x] HTTP Only cookie support (XSS)
 - [x] Custom token generation
 - [x] Custom token validation
+- [x] Custom token signature
 - [ ] Database driven log of `jti`, `aud` and `exp` to blacklist and revoke tokens
 - [ ] Provide auth scaffolding for generating JWTs
