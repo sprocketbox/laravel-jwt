@@ -24,7 +24,7 @@
   "require": {
     "php": "^7.2",
     "lcobucci/jwt": "^3.0",
-    "laravel/framework": "^6.0",
+    "laravel/framework": "^6.0||^7.0",
     "ramsey/uuid": "^3.7"
   },
   "extra": {
